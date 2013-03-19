@@ -36,44 +36,54 @@
  *
  * The function works by polling the DOM at short intervals. By default it polls
  * every 23 milliseconds, but you can change this by setting
- * $.elementReady.interval_ms to whatever value you like.
+ * $.elementReady.defaultIntervalMs before calling $.elementReady().
+ * Alternatively you can pass something like {intervalMs: 100} as the third argument
+ * the first time you call $.elementReady().
  * Don't bother changing this unless you really know what you're doing.
  *
  * @example
- * $.elementReady('powerpic', function(){
+ * $.elementReady('powerpic', function() {
  *     this.src = 'powered-by-jquery.png';
  * });
  * @desc Change the source of a specific image as soon as it is loaded into the
  * DOM (before the whole DOM is loaded).
  *
  * @example
- * $.elementReady('header', function(){
+ * $.elementReady('header', function() {
  *     $(this).addClass('fancy');
  * });
  * @desc If you want to have the jQuery object instead of the regular DOM
  * element, use the $(this) function.
  *
  * @example
- * $.elementReady('first',  function(){ $(this).fancify(); })
- *  .elementReady('second', function(){ $(this).fancify(); });
+ * $.elementReady('first',  function() { $(this).fancify(); })
+ *  .elementReady('second', function() { $(this).fancify(); });
  * @desc Chain multiple calls to $.elementReady().
  *
  * @example
  * jQuery.noConflict();
- * jQuery.elementReady('header', function($){
+ * jQuery.elementReady('header', function($) {
  *     $(this).addClass('fancy');
  * });
  * @desc Use the '$' alias within your callback, even in noConflict mode.
  *
  * @example
- * $.elementReady.interval_ms = 100;
- * @desc Change the polling interval to 100ms. This only works if $.elementReady()
+ * $.elementReady.defaultIntervalMs = 100;
+ * @desc Change the default polling interval to 100ms. This only works if $.elementReady()
  * has not yet been called.
+ *
+ * @example
+ * $.elementReady('powerpic', function() {
+ *     this.src = 'powered-by-jquery.png';
+ * }, {intervalMs: 100});
+ * @desc Change the default polling interval to 100ms. This only works if this is the
+ * first call to .elementReady().
  *
  * @name   $.elementReady
  * @type   jQuery
  * @param  String   id  string ID of the element to wait for
  * @param  Function fn  function to call when the element is ready
+ * @param  object   options  options for the call
  * @return jQuery
  * @cat    Plugins/Event
  * @author Bennett McElwee
@@ -81,33 +91,34 @@
 var interval = null;
 var checklist = [];
 
-$.elementReady = function(id, fn) {
+$.elementReady = function(id, fn, options) {
+	var options = $.extend({'intervalMs': $.elementReady.defaultIntervalMs}, options);
 	checklist.push({id: id, fn: fn});
 	if (!interval) {
-		interval = setInterval(check, $.elementReady.interval_ms);
+		interval = setInterval(function() {
+			var isLastCheck = $.isReady; // check doc ready first; thus ensure that check is made at least once _after_ doc is ready
+			for (var i = checklist.length - 1; 0 <= i; --i) {
+				var el = document.getElementById(checklist[i].id);
+				if (el) {
+					var fn = checklist[i].fn; // first remove from checklist, then call function
+					checklist[i] = checklist[checklist.length - 1];
+					checklist.pop();
+					if (0 == checklist.length) {
+						isLastCheck = true;
+					}
+					fn.apply(el, [$]);
+				}
+			}
+			if (isLastCheck) {
+				clearInterval(interval);
+				interval = null;
+			}
+		}, options.intervalMs);
 	}
 	return this;
 };
 
 // Plugin settings
-$.elementReady.interval_ms = 23; // polling interval in ms
-
-// Private function
-function check() {
-	var docReady = $.isReady; // check doc ready first; thus ensure that check is made at least once _after_ doc is ready
-	for (var i = checklist.length - 1; 0 <= i; --i) {
-		var el = document.getElementById(checklist[i].id);
-		if (el) {
-			var fn = checklist[i].fn; // first remove from checklist, then call function
-			checklist[i] = checklist[checklist.length - 1];
-			checklist.pop();
-			fn.apply(el, [$]);
-		}
-	}
-	if (docReady) {
-		clearInterval(interval);
-		interval = null;
-	}
-};
+$.elementReady.defaultIntervalMs = 23; // polling interval in ms
 
 })(jQuery);
