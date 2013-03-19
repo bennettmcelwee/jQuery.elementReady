@@ -42,59 +42,45 @@
  * Don't bother changing this unless you really know what you're doing.
  *
  * @example
- * $.elementReady('#powerpic', function() {
- *     this.src = 'powered-by-jquery.png';
- * });
- * @desc Change the source of the image with id="powerpic" as soon as it is loaded into the
- * DOM (before the whole DOM is loaded).
- *
- * @example
- * $.elementReady('header', function() {
- *     $(this).addClass('fancy');
- * });
+ * $.waitFor("header").done(function(elements) { elements.addClass("fancy"); });
  * @desc Add the class "fancy" to the HTML5 header element as soon as it is loaded.
  * Use $(this) to access the element as a jQuery object.
  *
  * @example
- * $.elementReady('#first',  function() { $(this).fancify(); })
- *  .elementReady('#second', function() { $(this).fancify(); });
- * @desc Chain multiple calls to $.elementReady().
+ * $.waitFor("header")
+ *     .done(function(elements) { elements.addClass("fancy"); })
+ *     .fail(function() { $("body").append("<p>Huh?</p>"); })
+ * @desc Add the class "fancy" to the HTML5 header element as soon as it is loaded.
+ * If it hasn't appeared by the time the document is ready, add a new element to the end.
  *
  * @example
- * jQuery.noConflict();
- * jQuery.elementReady('header', function($) {
- *     $(this).addClass('fancy');
- * });
- * @desc Use the '$' alias within your callback, even in noConflict mode.
- *
- * @example
- * $.elementReady.defaultIntervalMs = 100;
- * jQuery.elementReady('header', function($) {
- *     $(this).addClass('fancy');
+ * $.waitFor.defaultIntervalMs = 100;
+ * jQuery.waitFor("header").done(function(elements) {
+ *     elements.addClass("fancy");
  * });
  * @desc Poll every 100ms instead of the default.
  *
  * @example
- * jQuery.elementReady('header', function($) {
- *     $(this).addClass('fancy');
- * }, {intervalMs: 100});
+ * jQuery.waitFor("header", {intervalMs: 100}).done(function(elements) {
+ *     elements.addClass("fancy");
+ * });
  * @desc Another way to poll every 100ms instead of the default.
  *
- * @name   $.elementReady
+ * @name   $.waitFor
  * @type   jQuery
  * @param  String   selector  string selector of the element to wait for
- * @param  Function fn  function to call when the element is ready
  * @param  object   options  options for the call
- * @return jQuery
+ * @return Promise
  * @cat    Plugins/Event
  * @author Bennett McElwee
  */
 var interval = null;
 var checklist = [];
 
-$.elementReady = function(selector, fn, options) {
-	var options = $.extend({'intervalMs': $.elementReady.defaultIntervalMs}, options);
-	checklist.push({selector: selector, fn: fn});
+$.waitFor = function(selector, options) {
+	var options = $.extend({'intervalMs': $.waitFor.defaultIntervalMs}, options);
+	var newDeferred = jQuery.Deferred();
+	checklist.push({selector: selector, deferred: newDeferred});
 	if (!interval) {
 		interval = setInterval(function() {
 			var isLastCheck = $.isReady; // check doc ready first; thus ensure that check is made at least once _after_ doc is ready
@@ -102,28 +88,29 @@ $.elementReady = function(selector, fn, options) {
 				var elements = $(checklist[i].selector);
 				if (elements.length) {
 					// Remove this from the checklist
-					var fn = checklist[i].fn;
+					var deferred = checklist[i].deferred;
 					checklist[i] = checklist[checklist.length - 1];
 					checklist.pop();
 					if (0 == checklist.length) {
 						isLastCheck = true;
 					}
-					// Call the function
-					elements.each(function() {
-						fn.apply(this, [$]);
-					});
+					deferred.resolve(elements);
 				}
 			}
 			if (isLastCheck) {
 				clearInterval(interval);
 				interval = null;
+				for (var i = 0; i < checklist.length; ++i) {
+					deferred.reject();
+				}
+				checklist = [];
 			}
 		}, options.intervalMs);
 	}
-	return this;
+	return newDeferred.promise();
 };
 
 // Plugin settings
-$.elementReady.defaultIntervalMs = 23; // polling interval in ms
+$.waitFor.defaultIntervalMs = 23; // polling interval in ms
 
 })(jQuery);
