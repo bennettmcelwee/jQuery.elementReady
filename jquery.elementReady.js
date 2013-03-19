@@ -81,7 +81,7 @@
  *
  * @name   $.elementReady
  * @type   jQuery
- * @param  String   id  string ID of the element to wait for
+ * @param  String   selector  string selector of the element to wait for
  * @param  Function fn  function to call when the element is ready
  * @param  object   options  options for the call
  * @return jQuery
@@ -91,22 +91,26 @@
 var interval = null;
 var checklist = [];
 
-$.elementReady = function(id, fn, options) {
+$.elementReady = function(selector, fn, options) {
 	var options = $.extend({'intervalMs': $.elementReady.defaultIntervalMs}, options);
-	checklist.push({id: id, fn: fn});
+	checklist.push({selector: selector, fn: fn});
 	if (!interval) {
 		interval = setInterval(function() {
 			var isLastCheck = $.isReady; // check doc ready first; thus ensure that check is made at least once _after_ doc is ready
 			for (var i = checklist.length - 1; 0 <= i; --i) {
-				var el = document.getElementById(checklist[i].id);
-				if (el) {
-					var fn = checklist[i].fn; // first remove from checklist, then call function
+				var elements = $(checklist[i].selector);
+				if (elements.length) {
+					// Remove this from the checklist
+					var fn = checklist[i].fn;
 					checklist[i] = checklist[checklist.length - 1];
 					checklist.pop();
 					if (0 == checklist.length) {
 						isLastCheck = true;
 					}
-					fn.apply(el, [$]);
+					// Call the function
+					elements.each(function() {
+						fn.apply(this, [$]);
+					});
 				}
 			}
 			if (isLastCheck) {
