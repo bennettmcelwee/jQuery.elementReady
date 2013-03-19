@@ -1,6 +1,6 @@
 /* jQuery elementReady plugin
- * Version 0.6
- * Copyright (C) 2007-08 Bennett McElwee.
+ * Version 0.6+
+ * Copyright (C) 2007-13 Bennett McElwee.
  * Licensed under a Creative Commons Attribution-Share Alike 3.0 Unported License (http://creativecommons.org/licenses/by-sa/3.0/)
  * Permissions beyond the scope of this license may be available at http://www.thunderguy.com/semicolon/.
  */
