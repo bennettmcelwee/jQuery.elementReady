@@ -18,20 +18,20 @@
 (function($) {
 
 /**
- * While a page is loading, call a given callback function as soon as a specific
- * element (with a specific ID) is loaded into the DOM, even before the full DOM
- * has been loaded. Executes the function within the context of the element. This
+ * While a page is loading, call a given callback function as soon as any elements
+ * matching a specific selector are loaded into the DOM, even before the full DOM
+ * has been loaded. Executes the function within the context of each element. This
  * means that when the passed-in function is executed, the 'this' keyword points
  * to the specific DOM element.
  *
  * The function returns 'this', so you can chain multiple calls to
- * elementReady(). (Not that there's much benefit in doing that.)
+ * elementReady(). (This is probably not particularly useful though.)
  *
- * One argument is passed to the callback: a reference to the jQuery function.
+ * One argument is passed to the callback: a reference to the jQuery object.
  * You can name this argument $ and therefore use the $ alias even in
  * noConflict mode.
  *
- * If the element has not been found by the time the DOM is fully loaded, then
+ * If no matching element has been found by the time the DOM is fully loaded, then
  * the function will not be called.
  *
  * The function works by polling the DOM at short intervals. By default it polls
@@ -42,22 +42,22 @@
  * Don't bother changing this unless you really know what you're doing.
  *
  * @example
- * $.elementReady('powerpic', function() {
+ * $.elementReady('#powerpic', function() {
  *     this.src = 'powered-by-jquery.png';
  * });
- * @desc Change the source of a specific image as soon as it is loaded into the
+ * @desc Change the source of the image with id="powerpic" as soon as it is loaded into the
  * DOM (before the whole DOM is loaded).
  *
  * @example
  * $.elementReady('header', function() {
  *     $(this).addClass('fancy');
  * });
- * @desc If you want to have the jQuery object instead of the regular DOM
- * element, use the $(this) function.
+ * @desc Add the class "fancy" to the HTML5 header element as soon as it is loaded.
+ * Use $(this) to access the element as a jQuery object.
  *
  * @example
- * $.elementReady('first',  function() { $(this).fancify(); })
- *  .elementReady('second', function() { $(this).fancify(); });
+ * $.elementReady('#first',  function() { $(this).fancify(); })
+ *  .elementReady('#second', function() { $(this).fancify(); });
  * @desc Chain multiple calls to $.elementReady().
  *
  * @example
@@ -69,15 +69,16 @@
  *
  * @example
  * $.elementReady.defaultIntervalMs = 100;
- * @desc Change the default polling interval to 100ms. This only works if $.elementReady()
- * has not yet been called.
+ * jQuery.elementReady('header', function($) {
+ *     $(this).addClass('fancy');
+ * });
+ * @desc Poll every 100ms instead of the default.
  *
  * @example
- * $.elementReady('powerpic', function() {
- *     this.src = 'powered-by-jquery.png';
+ * jQuery.elementReady('header', function($) {
+ *     $(this).addClass('fancy');
  * }, {intervalMs: 100});
- * @desc Change the default polling interval to 100ms. This only works if this is the
- * first call to .elementReady().
+ * @desc Another way to poll every 100ms instead of the default.
  *
  * @name   $.elementReady
  * @type   jQuery
