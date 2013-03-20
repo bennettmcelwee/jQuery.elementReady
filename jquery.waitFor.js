@@ -15,7 +15,7 @@
 	None of these are likely to occur. In fact I don't think they are possible
 	at all except on IE. -- Bennett McElwee, August 2007
 */
-(function($) {
+;(function($, undefined) {
 
 /**
  * While a page is loading, call a given callback function as soon as any elements
@@ -79,7 +79,7 @@ var checklist = [];
 
 $.waitFor = function(selector, options) {
 	var options = $.extend({'intervalMs': $.waitFor.defaultIntervalMs}, options);
-	var newDeferred = jQuery.Deferred();
+	var newDeferred = $.Deferred();
 	checklist.push({selector: selector, deferred: newDeferred});
 	if (!interval) {
 		interval = setInterval(function() {
